@@ -28,11 +28,16 @@ module.exports.loop = function ()
 
     const remoteRooms = ['E38S4', 'E38S3']
 
+    // const remoteSources = [
+    //     new RoomPosition(9, 31, 'E38S4'),
+    //     new RoomPosition(10, 42, 'E38S4'),
+    //     new RoomPosition(3, 26, 'E38S3'),
+    //     new RoomPosition(27, 14, 'E38S3')
+    // ];
+
     const remoteSources = [
         new RoomPosition(9, 31, 'E38S4'),
-        new RoomPosition(10, 42, 'E38S4'),
-        new RoomPosition(3, 26, 'E38S3'),
-        new RoomPosition(27, 14, 'E38S3')
+        new RoomPosition(10, 42, 'E38S4')
     ];
 
     spawn.memory.maxNumMiners = 1;
@@ -41,11 +46,27 @@ module.exports.loop = function ()
     spawn.memory.maxNumPassers = 1;
     spawn.memory.maxNumDistributors = 1;
     spawn.memory.maxNumUpgraders = 1;
-    spawn.memory.maxNumRemoteHarvesters = 0;
-    spawn.memory.maxNumRemoteBuilders = 0;
+    spawn.memory.maxNumRemoteHarvesters = 2;
 
+    // maxNumBuilders
     var sites = spawn.room.find(FIND_MY_CONSTRUCTION_SITES);
-    spawn.memory.maxNumBuilders = Math.max(Math.ceil(sites.length / 10), 2);
+    spawn.memory.maxNumBuilders = Math.min(Math.ceil(sites.length / 10), 2);
+
+    // maxNumRemoteBuilders
+    spawn.memory.maxNumRemoteBuilders = 0;
+    for (let rm in remoteRooms)
+    {
+        let rRoom = Game.rooms[remoteRooms[rm]];
+        if (rRoom)
+        {
+            let rSites = rRoom.find(FIND_MY_CONSTRUCTION_SITES);
+            if (rSites.length > 0)
+            {
+                spawn.memory.maxNumRemoteBuilders++;
+            }
+        }
+    }
+    spawn.memory.maxNumRemoteBuilders = Math.min(spawn.memory.maxNumRemoteBuilders, 0);
 
     var storages = spawn.room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_STORAGE}});
     if (storages.length > 0)
@@ -211,7 +232,7 @@ module.exports.loop = function ()
     }
     else if (remoteHarvesters.length < spawn.memory.maxNumRemoteHarvesters)
     {
-        var mybody = [WORK,WORK,WORK, CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY, MOVE,MOVE,MOVE, MOVE,MOVE,MOVE,MOVE,MOVE,MOVE];
+        var mybody = [WORK,WORK,WORK,WORK,WORK, CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY, MOVE,MOVE,MOVE,MOVE,MOVE, MOVE,MOVE,MOVE,MOVE,MOVE];
         if (utils.bodyCost(mybody) <= room.energyAvailable)
         {
             var sourceTargetID = 0;
@@ -252,21 +273,20 @@ module.exports.loop = function ()
             spawn.memory.creepID++;
         }
     }
-    else if(0)
+    else if(remoteBuilders.length < spawn.memory.maxNumRemoteBuilders)
     {
         var mybody = [WORK,WORK,WORK, CARRY,CARRY,CARRY,CARRY, MOVE,MOVE,MOVE, MOVE,MOVE];
         if (utils.bodyCost(mybody) <= room.energyAvailable)
         {
-            var roomTargetID = 0;
-
+            var roomTargetID = -1;
             for (let i = 0; i < remoteRooms.length; ++i)
             {
                 let occupied = false;
 
-                for (var remoteHarvesterId in remoteBuilders)
+                for (var remoteBuilderId in remoteBuilders)
                 {
-                    var remoteHarvester = remoteHarvesters[remoteHarvesterId];
-                    if (remoteHarvester.memory.targetID == i)
+                    var remoteBuilder = remoteBuilders[remoteBuilderId];
+                    if (remoteBuilder.memory.targetID == i)
                     {
                         occupied = true;
                     }
@@ -274,25 +294,29 @@ module.exports.loop = function ()
 
                 if (!occupied)
                 {
-                    sourceTargetID = i;
+                    let remoteRoom = Game.rooms[remoteRooms[roomTargetID]];
+                    if (remoteRoom.find(FIND_MY_CONSTRUCTION_SITES).length > 0)
+                    {
+                        roomTargetID = i;
+                    }
                 }
             }
 
-            spawn.spawnCreep(mybody, 'remoteHarvester' + spawn.memory.creepID,
+            if (roomTargetID >= 0)
             {
-                memory:
+                spawn.spawnCreep(mybody, 'remoteHarvester' + spawn.memory.creepID,
                 {
-                    role: "remoteHarvester",
-                    storage: storages[0].pos,
-                    target: remoteSources[sourceTargetID],
-                    state: 0,
-                    targetID: sourceTargetID,
-                    startTime: Game.time,
-                    tripRoundTime: 0,
-                    ID: spawn.memory.creepID
-                }
-            });
-            spawn.memory.creepID++;
+                    memory:
+                    {
+                        role: "remoteHarvester",
+                        targetRoom: remoteRooms[roomTargetID],
+                        targetID: roomTargetID,
+                        state: 0,
+                        ID: spawn.memory.creepID
+                    }
+                });
+                spawn.memory.creepID++;
+            }
         }
     }
 

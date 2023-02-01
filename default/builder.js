@@ -6,7 +6,7 @@ module.exports =
         if (sites.length == 0)
         {
             creep.say('B:💤');
-            return;
+            creep.memory.state = 2;
         }
 
         if (creep.memory.state == 0) // filling up from storage
@@ -74,12 +74,21 @@ module.exports =
             }
             else
             {
+                creep.memory.state = 2;
                 creep.say('B:💤');
             }
 
             if (creep.store.getFreeCapacity() == creep.store.getCapacity()) // empty
             {
                 creep.memory.state = 0;
+            }
+        }
+        else if (creep.memory.state == 2) // recycle
+        {
+            var spawn = creep.room.find(FIND_MY_SPAWNS)[0];
+            if (spawn.recycleCreep(creep) == ERR_NOT_IN_RANGE)
+            {
+                creep.moveTo(spawn);
             }
         }
     }

@@ -76,7 +76,7 @@ module.exports =
             {
                 creep.memory.state = 0;
                 creep.memory.tripRoundTime = Game.time - creep.memory.startTime;
-                console.log('remote harvester ' + creep.memory.targetID + ': net energy gain per tick ' + (500.0 / creep.memory.tripRoundTime - 1500.0 / 1500.0));
+                console.log('remote harvester ' + creep.memory.targetID + ': trip round time = ' + creep.memory.tripRoundTime + '. net energy gain per tick = ' + (500.0 / creep.memory.tripRoundTime - 1500.0 / 1500.0));
                 creep.memory.startTime = Game.time;
 
                 if (creep.ticksToLive < creep.memory.tripRoundTime - 10)
