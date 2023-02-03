@@ -86,6 +86,7 @@ module.exports =
                         if (rSites.length > 0)
                         {
                             roomTargetID = i;
+                            break;
                         }
                     }
                 }

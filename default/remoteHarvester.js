@@ -35,7 +35,7 @@ module.exports =
         {
             filter: (structure) =>
             {
-                return structure.structureType == STRUCTURE_ROAD && structure.hits < structure.hitsMax;
+                return (structure.structureType == STRUCTURE_ROAD || structure.structureType == STRUCTURE_CONTAINER) && structure.hits < structure.hitsMax;
             }
         });
         // console.log('R' + creep.memory.targetID + " nearRoadsNeedRepair " + nearRoadsNeedRepair.length);
@@ -139,6 +139,7 @@ module.exports =
                 if (!occupied)
                 {
                     sourceTargetID = i;
+                    break;
                 }
             }
 
