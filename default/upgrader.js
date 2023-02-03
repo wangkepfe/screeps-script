@@ -1,3 +1,4 @@
+var utils = require('utils');
 module.exports =
 {
     run: function(creep)
@@ -48,6 +49,25 @@ module.exports =
             {
                 creep.memory.state = 0;
             }
+        }
+    },
+
+    create: function(room, spawn)
+    {
+        let mybody = [WORK,WORK,WORK,WORK,WORK, WORK,WORK,WORK,WORK,WORK, CARRY,CARRY,CARRY,CARRY,CARRY,CARRY, MOVE,MOVE,MOVE,MOVE,MOVE, MOVE,MOVE,MOVE,MOVE,MOVE];
+        if (utils.bodyCost(mybody) <= room.energyAvailable)
+        {
+            spawn.spawnCreep(mybody, 'upgrader' + spawn.memory.creepID,
+            {
+                memory:
+                {
+                    role: "upgrader",
+                    state: 0,
+                    ID: spawn.memory.creepID,
+                    roomName: room.name
+                }
+            });
+            spawn.memory.creepID++;
         }
     }
 }

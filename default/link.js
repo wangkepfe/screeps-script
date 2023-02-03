@@ -1,5 +1,6 @@
 var utils = require('utils');
 
+var utils = require('utils');
 module.exports =
 {
     run: function(link)

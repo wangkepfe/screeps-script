@@ -1,3 +1,4 @@
+var utils = require('utils');
 module.exports =
 {
     run: function(creep)
@@ -22,7 +23,16 @@ module.exports =
                 }
                 else
                 {
-                    creep.say('H:⛽');
+                    var containers = creep.pos.findInRange(FIND_STRUCTURES, 1, {filter: {structureType: STRUCTURE_CONTAINER}});
+                    if (containers.length > 0)
+                    {
+                        creep.withdraw(containers[0], RESOURCE_ENERGY);
+                        creep.say('H:⛽1');
+                    }
+                    else
+                    {
+                        creep.say('H:⛽2');
+                    }
                 }
             }
             else
@@ -104,6 +114,25 @@ module.exports =
             {
                 creep.memory.state = 0;
             }
+        }
+    },
+
+    create: function(room, spawn)
+    {
+        let mybody = [CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY, MOVE,MOVE,MOVE,MOVE];
+        if (utils.bodyCost(mybody) <= room.energyAvailable)
+        {
+            spawn.spawnCreep(mybody, 'hauler' + spawn.memory.creepID,
+            {
+                memory:
+                {
+                    role: "hauler",
+                    state: 0,
+                    ID: spawn.memory.creepID,
+                    roomName: room.name
+                }
+            });
+            spawn.memory.creepID++;
         }
     }
 }

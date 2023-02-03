@@ -1,3 +1,4 @@
+var utils = require('utils');
 module.exports =
 {
     run: function(creep)
@@ -24,7 +25,7 @@ module.exports =
             var mineCode = creep.harvest(source);
             if (mineCode == ERR_NOT_IN_RANGE)
             {
-                creep.moveTo(storage, {visualizePathStyle: {stroke: '#ffffff'}});
+                creep.moveTo(source, {visualizePathStyle: {stroke: '#ffffff'}});
             }
 
             if (creep.store.getFreeCapacity() == 0 || mineCode == ERR_NOT_ENOUGH_RESOURCES) // full
@@ -53,6 +54,58 @@ module.exports =
             if (creep.store.getFreeCapacity() == creep.store.getCapacity()) // empty
             {
                 creep.memory.state = 1;
+            }
+        }
+    },
+
+    create: function(room, spawn, remoteRooms, remoteBuilders)
+    {
+        let mybody = [WORK,WORK,WORK, CARRY,CARRY,CARRY,CARRY,CARRY,CARRY, MOVE,MOVE,MOVE];
+        if (utils.bodyCost(mybody) <= room.energyAvailable)
+        {
+            let roomTargetID = -1;
+            for (let i = 0; i < remoteRooms.length; ++i)
+            {
+                let occupied = false;
+
+                for (let remoteBuilderId in remoteBuilders)
+                {
+                    let remoteBuilder = remoteBuilders[remoteBuilderId];
+                    if (remoteBuilder.memory.targetID == i)
+                    {
+                        occupied = true;
+                    }
+                }
+
+                if (!occupied)
+                {
+                    let rRoom = Game.rooms[remoteRooms[i]];
+                    if (rRoom)
+                    {
+                        let rSites = rRoom.find(FIND_MY_CONSTRUCTION_SITES);
+                        if (rSites.length > 0)
+                        {
+                            roomTargetID = i;
+                        }
+                    }
+                }
+            }
+
+            if (roomTargetID >= 0)
+            {
+                spawn.spawnCreep(mybody, 'remoteBuilder' + spawn.memory.creepID,
+                {
+                    memory:
+                    {
+                        role: "remoteBuilder",
+                        targetRoom: remoteRooms[roomTargetID],
+                        targetID: roomTargetID,
+                        state: 0,
+                        ID: spawn.memory.creepID,
+                        roomName: room.name
+                    }
+                });
+                spawn.memory.creepID++;
             }
         }
     }

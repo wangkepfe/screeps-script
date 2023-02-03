@@ -1,3 +1,4 @@
+var utils = require('utils');
 module.exports =
 {
     run: function(creep)
@@ -29,6 +30,20 @@ module.exports =
         //         creep.room.createConstructionSite(creep.pos.x, creep.pos.y, STRUCTURE_ROAD);
         //     }
         // }
+
+        var nearRoadsNeedRepair = creep.pos.findInRange(FIND_STRUCTURES, 2,
+        {
+            filter: (structure) =>
+            {
+                return structure.structureType == STRUCTURE_ROAD && structure.hits < structure.hitsMax;
+            }
+        });
+        // console.log('R' + creep.memory.targetID + " nearRoadsNeedRepair " + nearRoadsNeedRepair.length);
+        if (nearRoadsNeedRepair.length > 0)
+        {
+            // console.log("repairing");
+            creep.repair(nearRoadsNeedRepair[0]);
+        }
 
         if (creep.memory.state == 0) // go there
         {
@@ -65,6 +80,11 @@ module.exports =
             {
                 creep.memory.state = 3;
             }
+
+            if (creep.store.getFreeCapacity() > 100)
+            {
+                creep.memory.state = 0;
+            }
         }
         else if (creep.memory.state == 3) // refill
         {
@@ -94,5 +114,51 @@ module.exports =
                 creep.moveTo(spawn);
             }
         }
+    },
+
+    create: function(room, spawn, remoteSources, remoteHarvesters, storage)
+    {
+        var mybody = [WORK,WORK,WORK,WORK,WORK, CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY, MOVE,MOVE,MOVE,MOVE,MOVE, MOVE,MOVE,MOVE,MOVE,MOVE];
+        if (utils.bodyCost(mybody) <= room.energyAvailable)
+        {
+            var sourceTargetID = 0;
+
+            for (let i = 0; i < remoteSources.length; ++i)
+            {
+                let occupied = false;
+
+                for (var remoteHarvesterId in remoteHarvesters)
+                {
+                    var remoteHarvester = remoteHarvesters[remoteHarvesterId];
+                    if (remoteHarvester.memory.targetID == i)
+                    {
+                        occupied = true;
+                    }
+                }
+
+                if (!occupied)
+                {
+                    sourceTargetID = i;
+                }
+            }
+
+            spawn.spawnCreep(mybody, 'remoteHarvester' + spawn.memory.creepID,
+            {
+                memory:
+                {
+                    role: "remoteHarvester",
+                    storage: storage.pos,
+                    target: remoteSources[sourceTargetID],
+                    state: 0,
+                    targetID: sourceTargetID,
+                    startTime: Game.time,
+                    tripRoundTime: 0,
+                    ID: spawn.memory.creepID,
+                    roomName: room.name
+                }
+            });
+            spawn.memory.creepID++;
+        }
     }
+
 }

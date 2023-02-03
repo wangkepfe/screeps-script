@@ -1,5 +1,6 @@
 var utils = require('utils');
 
+var utils = require('utils');
 module.exports =
 {
     run: function(creep)
@@ -92,5 +93,24 @@ module.exports =
 
         // creep.say(words);
         creep.say('P:🔄');
+    },
+
+    create: function(room, spawn)
+    {
+        let mybody = [CARRY,MOVE];
+        if (utils.bodyCost(mybody) <= room.energyAvailable)
+        {
+            spawn.spawnCreep(mybody, 'passer' + spawn.memory.creepID,
+            {
+                memory:
+                {
+                    role: "passer",
+                    state: 0,
+                    ID: spawn.memory.creepID,
+                    roomName: room.name
+                }
+            });
+            spawn.memory.creepID++;
+        }
     }
 }

@@ -156,4 +156,5 @@ var chart = {
 
 
 };
+var utils = require('utils');
 module.exports = chart;
